@@ -82,6 +82,7 @@ export default (env, argv) => {
           { from: './node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs', to: 'node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs' },
           { from: './node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm', to: 'node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm' },
           { from: './src/lib/trustmark/models/*.onnx', to: 'lib/trustmark/models/[name][ext]' },
+          { from: './node_modules/@contentauth/c2pa-web/dist/resources/c2pa_bg.wasm', to: 'lib/c2pa/c2pa_bg.wasm' },
           { from: './src/lib/trustmark/js', to: 'lib/trustmark/js', globOptions: { ignore: ['**/index.html', '**/test.jpg', '**/README.md'] } },
           { from: './node_modules/@fontsource/roboto/files/roboto-latin-100-normal.woff2', to: 'content/fonts/roboto-latin-100-normal.woff2' },
           { from: './node_modules/@fontsource/roboto/files/roboto-latin-300-normal.woff2', to: 'content/fonts/roboto-latin-300-normal.woff2' },

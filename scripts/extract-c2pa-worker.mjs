@@ -32,8 +32,12 @@ export async function extractC2paWorkerSource() {
     // Valid package exports subpath; the eslint resolver does not
     // understand the exports map.
     // eslint-disable-next-line import/no-unresolved
-    const sdk = await import('@contentauth/c2pa-web/inline');
-    await sdk.createC2pa();
+    const sdk = await import('@contentauth/c2pa-web');
+    // Hand createC2pa a pre-compiled (empty) WebAssembly.Module: the SDK only
+    // fetches wasmSrc when it is a string, and this way the worker blob is
+    // captured before any browser-only API is touched.
+    const emptyModule = await WebAssembly.compile(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
+    await sdk.createC2pa({ wasmSrc: emptyModule });
   } catch (error) {
     // Expected: Worker construction fails in Node after the blob is captured.
   } finally {

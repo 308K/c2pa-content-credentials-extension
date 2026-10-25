@@ -1,7 +1,7 @@
 /* eslint-disable consistent-return */
 /* eslint-disable no-undef */
 /* eslint-disable import/no-unresolved */
-import { createC2pa, isSupportedReaderFormat } from '@contentauth/c2pa-web/inline';
+import { createC2pa, isSupportedReaderFormat } from '@contentauth/c2pa-web';
 
 import {
   EVENT_TYPE_C2PA_MANIFEST,
@@ -598,10 +598,12 @@ async function initializeC2pa() {
     Logger.info(`Initializing C2PA Web SDK...${C2PA_VERSION}`);
     const { trustAnchors, allowedList, trustConfig } = await loadTrustSettingsFromLocalAssets();
     verifyTrustSetting = await getVerifyTrustSetting();
-    // Using inline WASM export, no manual wasmSrc configuration needed.
-    // Trust verification can be toggled from popup settings.
-    // Load local bundles that combine C2PA trust list, ITL and Digimarc anchors.
+    // Non-inline WASM build: the binary ships as lib/c2pa/c2pa_bg.wasm and is
+    // fetched + compiled on this page, then handed to the SDK worker. (The
+    // inline build embeds ~10MB of base64 in the JS bundle, which exceeds
+    // addons.mozilla.org's 5MB per-file parse limit.)
     c2pa = await createC2pa({
+      wasmSrc: chrome.runtime.getURL('lib/c2pa/c2pa_bg.wasm'),
       settings: {
         trust: {
           trustAnchors,
@@ -626,6 +628,7 @@ async function initializeOfficialC2pa() {
     const { officialTrustAnchors } = await loadTrustSettingsFromLocalAssets();
     verifyTrustSetting = await getVerifyTrustSetting();
     c2paOfficial = await createC2pa({
+      wasmSrc: chrome.runtime.getURL('lib/c2pa/c2pa_bg.wasm'),
       settings: {
         trust: {
           trustAnchors: officialTrustAnchors,
