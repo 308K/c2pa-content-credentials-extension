@@ -279,4 +279,11 @@ export class C2paPopover extends HTMLElement {
   }
 }
 
-customElements.define('c2pa-popover', C2paPopover);
+// Firefox content scripts share the page's CustomElementRegistry: skip
+// registering here so the page-world copy (content/c2pa-ui-page.js, loaded
+// with world: "MAIN") owns the definition and can actually upgrade elements.
+/* eslint-disable no-undef */
+if (typeof wrappedJSObject === 'undefined') {
+  customElements.define('c2pa-popover', C2paPopover);
+}
+/* eslint-enable no-undef */

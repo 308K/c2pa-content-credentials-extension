@@ -21,6 +21,16 @@
             "css": [
                 "content/contentStyles.css"
             ]
+        },
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content/c2pa-ui-page.js"
+            ],
+            "world": "MAIN",
+            "run_at": "document_idle"
         }
     ],
     "background": {

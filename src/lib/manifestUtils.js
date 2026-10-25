@@ -6,6 +6,7 @@ import {
 } from '../config.js';
 import { displayProcessStatus } from './statusIndicator.js';
 import Logger from './logger.js';
+import { isPageWorldUIAvailable, pageUpdateManifest } from '../content/c2pa-ui-bridge.js';
 
 export const compareManifests = (manifest1, manifest2) => {
   const ignoredKeys = new Set([
@@ -276,31 +277,51 @@ const displayManifest = (
         : null,
     });
 
-    manifestSummary.embeddedManifestStore = embeddedManifest;
-    manifestSummary.recoveredManifestStore = recoveredManifest;
-    manifestSummary.embeddedJsonManifestStore = embeddedRawSource;
-    manifestSummary.recoveredJsonManifestStore = recoveredRawSource;
-    manifestSummary.manifestStore = manifest;
-    manifestSummary.jsonManifestStore = rawManifestSource;
-    manifestSummary.viewMoreUrl = viewMoreUrl;
-    chrome.storage.local.get({ enableJsonManifestView: false }, (result) => {
-      manifestSummary.jsonManifestViewEnabled = Boolean(result.enableJsonManifestView);
-    });
+    if (isPageWorldUIAvailable()) {
+      // Firefox: property setters on page elements are invisible through Xray
+      // wrappers; send the payload to the page-world renderer instead.
+      chrome.storage.local.get({ enableJsonManifestView: false }, (result) => {
+        pageUpdateManifest({
+          baseId: c2paId,
+          embeddedManifestStore: embeddedManifest,
+          recoveredManifestStore: recoveredManifest,
+          embeddedJsonManifestStore: embeddedRawSource,
+          recoveredJsonManifestStore: recoveredRawSource,
+          manifestStore: manifest,
+          jsonManifestStore: rawManifestSource,
+          viewMoreUrl,
+          jsonManifestViewEnabled: Boolean(result.enableJsonManifestView),
+          thumbnailSrc: element.src,
+          variant: manifest.error ? 'error' : 'info-light',
+        });
+      });
+    } else {
+      manifestSummary.embeddedManifestStore = embeddedManifest;
+      manifestSummary.recoveredManifestStore = recoveredManifest;
+      manifestSummary.embeddedJsonManifestStore = embeddedRawSource;
+      manifestSummary.recoveredJsonManifestStore = recoveredRawSource;
+      manifestSummary.manifestStore = manifest;
+      manifestSummary.jsonManifestStore = rawManifestSource;
+      manifestSummary.viewMoreUrl = viewMoreUrl;
+      chrome.storage.local.get({ enableJsonManifestView: false }, (result) => {
+        manifestSummary.jsonManifestViewEnabled = Boolean(result.enableJsonManifestView);
+      });
 
-    const caiIndicator = document.getElementById(
-      `indicator-${c2paId}`,
-    );
+      const caiIndicator = document.getElementById(
+        `indicator-${c2paId}`,
+      );
 
-    if (!manifest.error) {
-      // ok
-      caiIndicator.variant = 'info-light';
-    } else if (manifest.error) {
-      // invalid
-      caiIndicator.variant = 'error';
+      if (!manifest.error) {
+        // ok
+        caiIndicator.variant = 'info-light';
+      } else if (manifest.error) {
+        // invalid
+        caiIndicator.variant = 'error';
+      }
+
+      manifestSummary.manifestStore.thumbnail = element.src;
+      caiIndicator.classList.add('manifest-loaded');
     }
-
-    manifestSummary.manifestStore.thumbnail = element.src;
-    caiIndicator.classList.add('manifest-loaded');
     element.classList.add('manifest-loaded');
   }
   Logger.info('Manifest loaded', { manifest });

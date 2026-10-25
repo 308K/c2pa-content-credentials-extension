@@ -10,6 +10,7 @@ import {
 import Logger from './logger.js';
 // eslint-disable-next-line
 import { getC2PAManifest } from './manifestUtils.js';
+import { isPageWorldUIAvailable, pageAddIcon } from '../content/c2pa-ui-bridge.js';
 
 // Initialize an empty array to store the IDs of handled images
 let handledMedias = [];
@@ -220,6 +221,12 @@ function determinePopoverPlacementSide(element) {
  */
 export const addIconForImage = (image, baseId) => {
   try {
+    // Firefox content scripts cannot upgrade custom elements (sandbox-private
+    // registry); delegate the UI DOM work to the page-world renderer.
+    if (isPageWorldUIAvailable()) {
+      pageAddIcon(baseId);
+      return;
+    }
     const iconContainer = document.getElementById('icon-container');
     // Create the icon and set its position to absolute
     const iconElement = document.createElement('div');
