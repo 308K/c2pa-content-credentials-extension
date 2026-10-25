@@ -68,6 +68,8 @@ export default (env, argv) => {
       new CopyWebpackPlugin({
         patterns: [
           { from: './src/manifest.json', to: 'manifest.json' },
+          { from: './src/manifest.firefox.json', to: 'manifest.firefox.json' },
+          { from: './src/background/background-ff.html', to: 'background/background-ff.html' },
           { from: './src/assets', to: 'assets' },
           { from: './src/assets/THIRD_PARTY_LICENSES.html', to: 'assets/THIRD_PARTY_LICENSES.html' },
           { from: './src/popup/popup.html', to: 'popup/popup.html' },

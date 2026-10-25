@@ -1135,7 +1135,9 @@ chrome.runtime.onMessage.addListener((event, sender, sendResponse) => {
 // ============================================================================
 // TRUSTMARK WATERMARK DECODER INITIALIZATION
 // ============================================================================
-// This runs in offscreen context where ORT can load wasm freely (no CSP restrictions)
+// This runs in the offscreen document (Chromium) or directly in the Firefox
+// background event page — both are extension contexts where ORT can load wasm
+// freely (no CSP restrictions).
 
 // Initialize ECC engines for watermark decoding (from tm_datalayer.js)
 const eccengine = [];
@@ -1159,6 +1161,23 @@ async function waitForORT(maxWaitMs = 5000) {
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   return ort;
+}
+
+// Prefer WebGPU when exposed by the platform (Chrome; Firefox Nightly with the
+// WebGPU flag) and transparently fall back to the WASM execution provider.
+async function createInferenceSession(modelBuffer, preferredEP = 'wasm') {
+  if (preferredEP === 'webgpu') {
+    try {
+      return await ort.InferenceSession.create(modelBuffer, {
+        executionProviders: ['webgpu'],
+      });
+    } catch (error) {
+      Logger.warn('WebGPU session creation failed, falling back to WASM', { error: error.message });
+    }
+  }
+  return ort.InferenceSession.create(modelBuffer, {
+    executionProviders: ['wasm'],
+  });
 }
 
 async function initTrustmarkIfNeeded() {
@@ -1189,6 +1208,7 @@ async function initTrustmarkIfNeeded() {
       ];
 
       // Load all Trustmark models
+      const preferredEP = (typeof navigator !== 'undefined' && navigator.gpu) ? 'webgpu' : 'wasm';
       // eslint-disable-next-line no-restricted-syntax
       for (const config of modelConfigs) {
         try {
@@ -1203,9 +1223,7 @@ async function initTrustmarkIfNeeded() {
           const modelBuffer = await response.arrayBuffer();
           Logger.debug(`Creating session for ${config.fname}`);
           // eslint-disable-next-line no-await-in-loop
-          trustmarkSessions[config.sessionVar] = await ort.InferenceSession.create(modelBuffer, {
-            executionProviders: ['webgpu'],
-          });
+          trustmarkSessions[config.sessionVar] = await createInferenceSession(modelBuffer, preferredEP);
           Logger.info(`✓ Trustmark ${config.fname} loaded in offscreen`);
         } catch (error) {
           Logger.error(`Failed to load ${config.fname}`, { error: error.message });

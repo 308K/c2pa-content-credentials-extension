@@ -159,8 +159,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  // Route Trustmark messages to offscreen document
-  if (message?.type === 'trustmark:runTrustmark') {
+  // Route Trustmark messages to the offscreen document (Chromium only).
+  // On Firefox the offscreen API is unavailable and the Trustmark listener
+  // from offscreen.js runs directly in this background event page.
+  if (chrome.offscreen && message?.type === 'trustmark:runTrustmark') {
     Logger.debug('Routing Trustmark request to offscreen', { senderUrl: sender.url });
     chrome.runtime.sendMessage(message, (response) => {
       if (chrome.runtime.lastError) {
@@ -178,8 +180,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
-// Initialize the extension offscreen document
+// Initialize the extension offscreen document (Chromium only; Firefox runs
+// the offscreen modules inside the background event page instead)
 const init = async () => {
+  if (!chrome.offscreen) {
+    Logger.info('Offscreen API unavailable; offscreen modules run in the background event page');
+    return;
+  }
   if (await chrome.offscreen.hasDocument()) {
     Logger.info('Offscreen document already exists');
     return;

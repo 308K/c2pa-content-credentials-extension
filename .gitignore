@@ -6,3 +6,4 @@ build/
 dist/
 src/config.js
 test-results/
+dist-firefox/

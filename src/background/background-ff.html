@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>C2PA Content Credentials background event page (Firefox)</title>
+  </head>
+  <body>
+    <!--
+      Firefox MV3 runs a non-persistent event page instead of a service worker
+      and has no chrome.offscreen API. The modules below load into this page:
+      background.js keeps its Chromium-only offscreen setup disabled, and
+      offscreen.js runs the C2PA SDK initialization and Trustmark inference
+      directly in this document (a full DOM context, so OffscreenCanvas,
+      Image and wasm are all available).
+    -->
+    <script src="../node_modules/onnxruntime-web/dist/ort.webgpu.min.js"></script>
+    <script src="../lib/trustmark/js/deps/bch_ecc.js"></script>
+    <script src="../lib/trustmark/js/tm_datalayer.js"></script>
+    <script type="module" src="background.js"></script>
+    <script type="module" src="../offscreen/offscreen.js"></script>
+  </body>
+</html>

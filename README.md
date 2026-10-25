@@ -123,6 +123,23 @@ You can also check out the code and install the extension locally
 9. Run `npm run test` to ensure all tests pass before creating a Pull Request.
 10. Try it out! (see Usage)
 
+### Firefox build
+
+The extension also builds for Firefox (Manifest V3 event page). Instead of a service worker plus a Chrome offscreen document, Firefox runs the background logic (including the C2PA SDK and Trustmark watermark inference) directly inside a non-persistent background event page — see `src/background/background-ff.html` and `src/manifest.firefox.json`.
+
+1. Follow steps 1–3 above (`npm install` and the `src/config.js` setup).
+2. Build the Firefox variant using one of:
+   - `npm run build:firefox` - Production build (writes `dist/` then `dist-firefox/`)
+   - `npm run build:firefox:dev` - Development build (faster, with source maps)
+3. Load the result in Firefox:
+   - Temporary add-on: go to `about:debugging#/runtime/this-firefox`, click *Load Temporary Add-on...* and pick `dist-firefox/manifest.json`, or run `web-ext run --source-dir dist-firefox`.
+   - Permanent install: package with `web-ext build --source-dir dist-firefox` and sign via [addons.mozilla.org](https://addons.mozilla.org/developers/) (the `browser_specific_settings.gecko.id` in `src/manifest.firefox.json` must be unique to your listing).
+
+Firefox-specific notes:
+
+- **Host permissions are opt-in.** Unlike Chrome, Firefox does not grant `<all_urls>` host permissions automatically at install time. Until the user grants the extension access to a site (via the install prompt or the extension's *Permissions* tab), fetching media bytes for verification may fail on that site.
+- **Trustmark inference uses WASM on Firefox.** Firefox release builds do not expose WebGPU yet, so the ONNX Runtime sessions fall back to the WebAssembly execution provider (`createInferenceSession` in `src/offscreen/offscreen.js`). Watermark detection works but is slower than on WebGPU.
+
 ## Known limitations
 
 ### Restricted to JPEG and PNG images, MP4 videos and MP3 and WAV audio files

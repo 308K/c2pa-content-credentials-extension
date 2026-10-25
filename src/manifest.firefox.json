@@ -1,0 +1,84 @@
+{
+    "manifest_version": 3,
+    "name": "C2PA Content Credentials",
+    "version": "0.2.0",
+    "description": "Verify and display manifests for images, audio and videos embedding C2PA Content Credentials.",
+    "icons": {
+        "16": "assets/icons/icon-16.png",
+        "48": "assets/icons/icon-48.png",
+        "128": "assets/icons/icon-128.png"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js",
+                "lib/trustmark/js/tm_watermark.js",
+                "content/contentScript.js"
+            ],
+            "css": [
+                "content/contentStyles.css"
+            ]
+        }
+    ],
+    "background": {
+        "page": "background/background-ff.html"
+    },
+    "action": {
+        "default_popup": "popup/popup.html",
+        "default_icon": {
+            "16": "assets/icons/icon-16.png",
+            "48": "assets/icons/icon-48.png",
+            "128": "assets/icons/icon-128.png"
+        }
+    },
+    "permissions": [
+        "tabs",
+        "storage",
+        "contextMenus"
+    ],
+    "host_permissions": [
+        "http://*/*",
+        "https://*/*"
+    ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+      },
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "assets/icons/*",
+                "content/*",
+                "content/fonts/*",
+                "background/*",
+                "lib/*",
+                "lib/trustmark/js/*",
+                "lib/trustmark/deps/*",
+                "lib/trustmark/models/*",
+                "node_modules/onnxruntime-web/dist/*",
+                "popup/*",
+                "offscreen/*",
+                "config.js"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "c2pa-content-credentials@digimarc-corp.org",
+            "strict_min_version": "128.0",
+            "data_collection_permissions": {
+                "required": [
+                    "none"
+                ],
+                "optional": [
+                    "websiteContent"
+                ]
+            }
+        }
+    }
+}
