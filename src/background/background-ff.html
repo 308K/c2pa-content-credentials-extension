@@ -13,6 +13,9 @@
       directly in this document (a full DOM context, so OffscreenCanvas,
       Image and wasm are all available).
     -->
+    <!-- Redirects the C2PA SDK's blob:/data: worker to a packaged extension
+         file; Firefox extension pages cannot load blob:/data: workers. -->
+    <script src="c2pa-worker-shim.js"></script>
     <script src="../node_modules/onnxruntime-web/dist/ort.webgpu.min.js"></script>
     <script src="../lib/trustmark/js/deps/bch_ecc.js"></script>
     <script src="../lib/trustmark/js/tm_datalayer.js"></script>

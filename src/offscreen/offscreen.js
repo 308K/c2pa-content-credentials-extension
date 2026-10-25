@@ -11,7 +11,6 @@ import {
   C2PA_VERSION,
   API_SBR_DIGIMARC_RESIZE_PARAM,
   API_SBR_ADOBE_RESIZE_PARAM,
-  MSG_GET_VERIFY_TRUST_SETTING,
   MSG_VERIFY_TRUST_UPDATED,
   C2PA_TRUST_ANCHORS_LOCAL_PATH,
   C2PA_ALLOWED_LIST_LOCAL_PATH,
@@ -38,17 +37,18 @@ let verifyTrustSetting = true;
 const manifestMap = {};
 
 function getVerifyTrustSetting() {
+  // Read storage directly: runtime.sendMessage cannot reach a listener in
+  // this same context when offscreen.js runs in the Firefox background page.
   return new Promise((resolve) => {
-    chrome.runtime.sendMessage({ type: MSG_GET_VERIFY_TRUST_SETTING }, (response) => {
+    chrome.storage.local.get({ verifyTrust: true }, (result) => {
       if (chrome.runtime.lastError) {
-        Logger.warn('Failed to fetch verifyTrust setting, defaulting to true', {
+        Logger.warn('Failed to read verifyTrust setting, defaulting to true', {
           error: chrome.runtime.lastError.message,
         });
         resolve(true);
         return;
       }
-
-      resolve(response?.verifyTrust ?? true);
+      resolve(result?.verifyTrust ?? true);
     });
   });
 }

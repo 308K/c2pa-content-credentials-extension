@@ -137,6 +137,7 @@ The extension also builds for Firefox (Manifest V3 event page). Instead of a ser
 
 Firefox-specific notes:
 
+- **The C2PA SDK worker is packaged as a real extension file.** `@contentauth/c2pa-web` runs its WASM runtime in a web worker built from a blob:/data: URL, which Firefox extension pages forbid under the extension CSP (and this cannot be relaxed via the manifest — with the stock setup `createC2pa()` hangs forever). `scripts/extract-c2pa-worker.mjs` captures the SDK's embedded worker source at build time, `make-firefox-dist.js` writes it to `lib/c2pa/c2pa-sdk-worker.js`, and `src/background/c2pa-worker-shim.js` redirects the SDK's worker construction to that packaged file. Chromium is unaffected.
 - **Host permissions are opt-in.** Unlike Chrome, Firefox does not grant `<all_urls>` host permissions automatically at install time. Until the user grants the extension access to a site (via the install prompt or the extension's *Permissions* tab), fetching media bytes for verification may fail on that site.
 - **Trustmark inference uses WASM on Firefox.** Firefox release builds do not expose WebGPU yet, so the ONNX Runtime sessions fall back to the WebAssembly execution provider (`createInferenceSession` in `src/offscreen/offscreen.js`). Watermark detection works but is slower than on WebGPU.
 

@@ -7,6 +7,7 @@ import {
 } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { extractC2paWorkerSource } from './extract-c2pa-worker.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
@@ -61,6 +62,15 @@ writeFileSync(backgroundHtmlPath, rewriteVendorPaths(readFileSync(backgroundHtml
 // Chrome-only offscreen host page; the offscreen.js bundle itself stays
 // because the Firefox background event page loads it as a module.
 rmSync(path.join(outputDir, 'offscreen', 'offscreen.html'), { force: true });
+
+// Ship the C2PA SDK worker as a real extension file. Firefox extension pages
+// cannot create blob:/data: workers (hard CSP limit), so the shim in
+// background-ff.html redirects the SDK to this file.
+const c2paWorkerSource = await extractC2paWorkerSource();
+const c2paWorkerPath = path.join(outputDir, 'lib', 'c2pa', 'c2pa-sdk-worker.js');
+mkdirSync(path.dirname(c2paWorkerPath), { recursive: true });
+writeFileSync(c2paWorkerPath, c2paWorkerSource);
+console.log(`C2PA SDK worker (${c2paWorkerSource.length} bytes) written to lib/c2pa/c2pa-sdk-worker.js`);
 
 console.log('Firefox build written to dist-firefox/');
 console.log('Load it with: web-ext run --source-dir dist-firefox');
