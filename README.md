@@ -135,6 +135,19 @@ The extension also builds for Firefox (Manifest V3 event page). Instead of a ser
    - Temporary add-on: go to `about:debugging#/runtime/this-firefox`, click *Load Temporary Add-on...* and pick `dist-firefox/manifest.json`, or run `web-ext run --source-dir dist-firefox`.
    - Permanent install: package with `web-ext build --source-dir dist-firefox` and sign via [addons.mozilla.org](https://addons.mozilla.org/developers/) (the `browser_specific_settings.gecko.id` in `src/manifest.firefox.json` must be unique to your listing).
 
+#### Self-hosted updates
+
+`manifest.firefox.json` declares `browser_specific_settings.gecko.update_url`, pointing at [`updates.json`](../updates.json) served raw from this repository (`https://raw.githubusercontent.com/<owner>/<repo>/<branch>/updates.json`). Firefox fetches that manifest about once a day and installs the newest listed version.
+
+Release flow for a self-hosted update:
+
+1. Bump `version` in `src/manifest.firefox.json` and build: `npm run build:firefox`.
+2. Sign the package (unlisted channel, so `update_url` is preserved): `web-ext sign --source-dir dist-firefox --api-key ... --api-secret ... --channel unlisted`. Unsigned .xpi files cannot be permanently installed in release Firefox and never auto-update.
+3. Attach the signed .xpi to a GitHub release.
+4. Add the entry: `node scripts/make-update-manifest.js https://github.com/<owner>/<repo>/releases/download/<tag>/<file>.xpi` (uses the manifest version; `--version=X.Y.Z` overrides), then commit and push — the raw URL serves the branch's copy within minutes.
+
+Note: the raw `update_url` is branch-pinned; if the distribution branch is renamed or merged away, update the URL in `manifest.firefox.json` (which then requires a newly signed release to take effect).
+
 Firefox-specific notes:
 
 - **The C2PA UI renders through a page-world content script.** Firefox runs isolated content scripts with a sandbox-private view of the page's `CustomElementRegistry`: `customElements.define` calls from the isolated world register in the page registry but elements created there never upgrade through the sandbox, and property setters on page elements are invisible through Xray wrappers. On Firefox the components therefore register only from `content/c2pa-ui-page.js`, declared with `"world": "MAIN"` in `manifest.firefox.json`, and the isolated script (`src/content/c2pa-ui-bridge.js`) forwards icon placement and manifest-summary updates to it via `CustomEvent`s. The component modules skip their own `customElements.define` when `wrappedJSObject` is defined (Firefox only), and Chromium keeps the direct code path unchanged.

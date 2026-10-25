@@ -21,7 +21,8 @@
         "test": "playwright test",
         "licenses": "./scripts/licenses.sh",
         "build:firefox": "npm run build && node scripts/make-firefox-dist.js",
-        "build:firefox:dev": "npm run build:dev && node scripts/make-firefox-dist.js"
+        "build:firefox:dev": "npm run build:dev && node scripts/make-firefox-dist.js",
+        "update-manifest": "node scripts/make-update-manifest.mjs"
     },
     "devDependencies": {
         "@babel/core": "^7.29.0",
