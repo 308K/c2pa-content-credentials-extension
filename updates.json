@@ -3,6 +3,10 @@
     "c2pa-content-credentials@digimarc-corp.org": {
       "updates": [
         {
+          "version": "0.2.2",
+          "update_link": "https://github.com/308K/c2pa-content-credentials-extension/releases/download/firefox-v0.2.2/c2pa-content-credentials-firefox-0.2.2.xpi"
+        },
+        {
           "version": "0.2.1",
           "update_link": "https://github.com/308K/c2pa-content-credentials-extension/releases/download/firefox-v0.2.1/c2pa-content-credentials-firefox-0.2.1.xpi"
         },

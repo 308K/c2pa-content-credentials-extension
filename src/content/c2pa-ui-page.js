@@ -19,7 +19,20 @@ const BRIDGE_EVENT = 'c2pa-ext-bridge';
 const MIN_DISTANCE_FROM_LEFT_BORDER_IN_PIXELS = 365;
 
 function getVisibleRect(element) {
-  const visibleRect = element.getBoundingClientRect();
+  // Copy into a plain object: assigning to the DOMRect returned by
+  // getBoundingClientRect() throws in strict-mode Firefox once an
+  // overflow:hidden ancestor is reached, killing icon placement entirely
+  // (ChatGPT et al.); Chrome tolerated the assignment, which is why this
+  // only broke on some sites.
+  const br = element.getBoundingClientRect();
+  const visibleRect = {
+    top: br.top,
+    bottom: br.bottom,
+    left: br.left,
+    right: br.right,
+    width: br.width,
+    height: br.height,
+  };
   let node = element;
   while (node.parentElement) {
     node = node.parentElement;
@@ -53,22 +66,77 @@ function findMediaByBaseId(baseId) {
   );
 }
 
+// SPA viewers (ChatGPT lightbox, carousels) routinely replace <img> nodes,
+// leaving the tagged element detached; its rect then reads all zeros and the
+// icon would be positioned off screen. Prefer a live, visible <img> showing
+// the same resource instead.
+function isPlacedInView(element) {
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0
+    && rect.bottom > 0 && rect.right > 0
+    && rect.top < window.innerHeight && rect.left < window.innerWidth;
+}
+
+function findLiveImageBySrc(src) {
+  if (!src) {
+    return null;
+  }
+  let best = null;
+  let bestArea = 0;
+  document.querySelectorAll(`img[src="${CSS.escape(src)}"], img[currentSrc="${CSS.escape(src)}"]`)
+    .forEach((candidate) => {
+      if (!isPlacedInView(candidate)) {
+        return;
+      }
+      const rect = candidate.getBoundingClientRect();
+      const area = rect.width * rect.height;
+      if (area > bestArea) {
+        best = candidate;
+        bestArea = area;
+      }
+    });
+  return best;
+}
+
+function resolveIconTarget(baseId, src) {
+  const tagged = findMediaByBaseId(baseId);
+  if (tagged && tagged.tagName !== 'AUDIO' && isPlacedInView(tagged)) {
+    return tagged;
+  }
+  const live = findLiveImageBySrc(src);
+  if (live) {
+    return live;
+  }
+  return tagged && tagged.tagName !== 'AUDIO' ? tagged : null;
+}
+
 // Page-world twin of addIconForImage in src/lib/imageUtils.js.
-function addIcon(baseId) {
-  const image = findMediaByBaseId(baseId);
+function addIcon(baseId, src) {
+  const image = resolveIconTarget(baseId, src);
   if (!image) {
+    // eslint-disable-next-line no-console
+    console.warn('c2pa-ui-page: no image found for icon', baseId, src);
     return;
   }
   const iconContainer = document.getElementById('icon-container');
   if (!iconContainer) {
+    // eslint-disable-next-line no-console
+    console.warn('c2pa-ui-page: icon container missing');
     return;
   }
   const iconElement = document.createElement('div');
   iconElement.id = `icon-${baseId}`;
   iconElement.style.position = 'absolute';
   const rect = getVisibleRect(image);
-  iconElement.style.top = `${rect.top}px`;
-  iconElement.style.right = `${window.innerWidth - rect.right}px`;
+  // Clamp into the viewport: overflow clamping and detached elements can
+  // otherwise yield coordinates outside the window, hiding the icon.
+  const top = Math.min(Math.max(rect.top, 8), Math.max(window.innerHeight - 56, 8));
+  const right = Math.min(
+    Math.max(window.innerWidth - rect.right, 8),
+    Math.max(window.innerWidth - 56, 8),
+  );
+  iconElement.style.top = `${top}px`;
+  iconElement.style.right = `${right}px`;
   iconElement.style.pointerEvents = 'auto';
 
   const caiPopover = createC2PAComponents(baseId);
@@ -80,6 +148,8 @@ function addIcon(baseId) {
   });
 
   iconContainer.appendChild(iconElement);
+  // eslint-disable-next-line no-console
+  console.info('c2pa-ui-page: icon placed', baseId, 'top', top, 'right', right);
 }
 
 // Page-world twin of the manifest-summary configuration section of
@@ -114,7 +184,7 @@ document.addEventListener(BRIDGE_EVENT, (event) => {
   }
   try {
     if (command.cmd === 'addIcon') {
-      addIcon(command.baseId);
+      addIcon(command.baseId, command.src);
     } else if (command.cmd === 'updateManifest') {
       updateManifest(command);
     }

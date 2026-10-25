@@ -224,7 +224,7 @@ export const addIconForImage = (image, baseId) => {
     // Firefox content scripts cannot upgrade custom elements (sandbox-private
     // registry); delegate the UI DOM work to the page-world renderer.
     if (isPageWorldUIAvailable()) {
-      pageAddIcon(baseId);
+      pageAddIcon(baseId, image.currentSrc || image.src || '');
       return;
     }
     const iconContainer = document.getElementById('icon-container');

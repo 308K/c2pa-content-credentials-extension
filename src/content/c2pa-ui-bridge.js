@@ -30,8 +30,8 @@ export function isPageWorldUIAvailable() {
   return pageWorldAvailable;
 }
 
-export function pageAddIcon(baseId) {
-  return send({ cmd: 'addIcon', baseId });
+export function pageAddIcon(baseId, src) {
+  return send({ cmd: 'addIcon', baseId, src });
 }
 
 export function pageUpdateManifest(payload) {
