@@ -88,8 +88,7 @@
                 "optional": [
                     "websiteContent"
                 ]
-            },
-            "update_url": "https://raw.githubusercontent.com/308K/c2pa-content-credentials-extension/firefox-support/updates.json"
+            }
         }
     }
 }

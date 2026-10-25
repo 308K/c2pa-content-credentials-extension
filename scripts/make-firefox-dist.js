@@ -56,6 +56,18 @@ writeFileSync(
 );
 rmSync(path.join(outputDir, 'manifest.firefox.json'), { force: true });
 
+// Self-hosted variant: bake update_url into the generated manifest so signed
+// unlisted builds auto-update from updates.json in this repository. Kept out
+// of the default build because addons.mozilla.org validation rejects
+// update_url ("not allowed for Mozilla-hosted add-ons").
+if (process.argv.includes('--self-host')) {
+  const manifestPath = path.join(outputDir, 'manifest.json');
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  manifest.browser_specific_settings.gecko.update_url = 'https://raw.githubusercontent.com/308K/c2pa-content-credentials-extension/firefox-support/updates.json';
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 4)}\n`);
+  console.log('self-host: update_url injected into manifest.json');
+}
+
 const backgroundHtmlPath = path.join(outputDir, 'background', 'background-ff.html');
 writeFileSync(backgroundHtmlPath, rewriteVendorPaths(readFileSync(backgroundHtmlPath, 'utf8')));
 

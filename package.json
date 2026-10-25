@@ -22,7 +22,8 @@
         "licenses": "./scripts/licenses.sh",
         "build:firefox": "npm run build && node scripts/make-firefox-dist.js",
         "build:firefox:dev": "npm run build:dev && node scripts/make-firefox-dist.js",
-        "update-manifest": "node scripts/make-update-manifest.mjs"
+        "update-manifest": "node scripts/make-update-manifest.js",
+        "build:firefox:self-host": "npm run build && node scripts/make-firefox-dist.js --self-host"
     },
     "devDependencies": {
         "@babel/core": "^7.29.0",

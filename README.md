@@ -137,16 +137,19 @@ The extension also builds for Firefox (Manifest V3 event page). Instead of a ser
 
 #### Self-hosted updates
 
-`manifest.firefox.json` declares `browser_specific_settings.gecko.update_url`, pointing at [`updates.json`](../updates.json) served raw from this repository (`https://raw.githubusercontent.com/<owner>/<repo>/<branch>/updates.json`). Firefox fetches that manifest about once a day and installs the newest listed version.
+Self-hosted distribution uses two build variants:
+
+- `npm run build:firefox` — plain build, no `update_url` (addons.mozilla.org validation rejects `update_url` as "not allowed for Mozilla-hosted add-ons").
+- `npm run build:firefox:self-host` — additionally injects `browser_specific_settings.gecko.update_url`, pointing at [`updates.json`](../updates.json) served raw from this repository (`https://raw.githubusercontent.com/<owner>/<repo>/<branch>/updates.json`). Firefox fetches that manifest about once a day and installs the newest listed version.
 
 Release flow for a self-hosted update:
 
-1. Bump `version` in `src/manifest.firefox.json` and build: `npm run build:firefox`.
+1. Bump `version` in `src/manifest.firefox.json` and build: `npm run build:firefox:self-host`.
 2. Sign the package (unlisted channel, so `update_url` is preserved): `web-ext sign --source-dir dist-firefox --api-key ... --api-secret ... --channel unlisted`. Unsigned .xpi files cannot be permanently installed in release Firefox and never auto-update.
-3. Attach the signed .xpi to a GitHub release.
-4. Add the entry: `node scripts/make-update-manifest.js https://github.com/<owner>/<repo>/releases/download/<tag>/<file>.xpi` (uses the manifest version; `--version=X.Y.Z` overrides), then commit and push — the raw URL serves the branch's copy within minutes.
+3. Attach the signed .xpi to the version's GitHub release.
+4. Add the entry: `npm run update-manifest -- https://github.com/<owner>/<repo>/releases/download/<tag>/<file>.xpi` (uses the manifest version; `--version=X.Y.Z` overrides), then commit and push — the raw URL serves the branch's copy within minutes.
 
-Note: the raw `update_url` is branch-pinned; if the distribution branch is renamed or merged away, update the URL in `manifest.firefox.json` (which then requires a newly signed release to take effect).
+Note: the raw `update_url` is branch-pinned; if the distribution branch is renamed or merged away, update the URL in `scripts/make-firefox-dist.js` (which then requires a newly signed release to take effect).
 
 Firefox-specific notes:
 
