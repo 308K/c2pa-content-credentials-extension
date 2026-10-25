@@ -19,7 +19,9 @@
         "watch": "webpack --mode development --watch",
         "lint": "eslint . --fix",
         "test": "playwright test",
-        "licenses": "./scripts/licenses.sh"
+        "licenses": "./scripts/licenses.sh",
+        "build:firefox": "npm run build && node scripts/make-firefox-dist.js",
+        "build:firefox:dev": "npm run build:dev && node scripts/make-firefox-dist.js"
     },
     "devDependencies": {
         "@babel/core": "^7.29.0",
@@ -36,6 +38,7 @@
         "lit-html": "^2.8.0",
         "mini-css-extract-plugin": "^2.10.2",
         "style-loader": "^4.0.0",
+        "terser-webpack-plugin": "^5.6.1",
         "webpack": "^5.106.2",
         "webpack-bundle-analyzer": "^4.10.2",
         "webpack-cli": "^5.1.4",
